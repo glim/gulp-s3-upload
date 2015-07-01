@@ -31,7 +31,8 @@ module.exports = {
             'ContentType',
             'verbose',
             'uploadNewFilesOnly',
-            'charset'
+            'charset',
+            'encoding'
         ];
 
         return _.omit(params, omit_array);

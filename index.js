@@ -30,7 +30,7 @@ gulpPrefixer = function (AWS) {
 
             var _stream = this,
                 keyTransform, keyname, keyparts, filename,
-                mimetype, mime_lookup_name, metadata;
+                mimetype, mime_lookup_name, metadata,encoding;
 
             if(file.isNull()) {
                 //  Do nothing if no contents
@@ -97,6 +97,8 @@ gulpPrefixer = function (AWS) {
                 }
             }
 
+            encoding =  options.encoding || '';
+
             //  options.Metadata is not filtered out later.
 
             gutil.log(gutil.colors.cyan("Uploading ....."), keyname);
@@ -119,6 +121,7 @@ gulpPrefixer = function (AWS) {
                 objOpts.Body        = file.contents;
                 objOpts.ContentType = mimetype;
                 objOpts.Metadata    = metadata;
+                objOpts.ContentEncoding = encoding;
 
                 if(options.uploadNewFilesOnly && !getData || !options.uploadNewFilesOnly) {
                     _s3.putObject(objOpts, function (err, data) {
