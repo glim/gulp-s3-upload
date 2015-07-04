@@ -6,6 +6,7 @@ var through     = require('through2')
 ,   helper      = require('./src/helper.js')
 ,   PluginError = gutil.PluginError
 ,   gulpPrefixer
+,   crypto	= require('crypto')
 ;
 
 const PLUGIN_NAME = 'gulp-s3-upload';
@@ -101,7 +102,7 @@ gulpPrefixer = function (AWS) {
 
             //  options.Metadata is not filtered out later.
 
-            gutil.log(gutil.colors.cyan("Uploading ....."), keyname);
+            gutil.log(gutil.colors.cyan("Checking ....."), keyname);
 
             _s3.headObject({
                 'Bucket': the_bucket,
@@ -123,7 +124,10 @@ gulpPrefixer = function (AWS) {
                 objOpts.Metadata    = metadata;
                 objOpts.ContentEncoding = encoding;
 
-                if(options.uploadNewFilesOnly && !getData || !options.uploadNewFilesOnly) {
+                var hash = crypto.createHash('md5').update(file.contents).digest("hex");
+
+                if (!getData || hash != getData.ETag.replace(/"/g,'')) {
+	            gutil.log(gutil.colors.yellow("Uploading ....."), keyname);
                     _s3.putObject(objOpts, function (err, data) {
 
                         if(err) {
@@ -131,11 +135,7 @@ gulpPrefixer = function (AWS) {
                         }
 
                         if(getData) {
-                            if(getData.ETag !== data.ETag) {
-                                gutil.log(gutil.colors.yellow("Updated ......."), keyname);
-                            } else {
-                                gutil.log(gutil.colors.gray("No Change ....."), keyname);
-                            }
+                            gutil.log(gutil.colors.yellow("Updated ......."), keyname);
                         } else {
                             // doesn't exist in bucket, the object is new to the bucket
                             gutil.log(gutil.colors.green("Uploaded! ....."), keyname);
@@ -143,6 +143,10 @@ gulpPrefixer = function (AWS) {
 
                         callback(null);
                     });
+                }
+                else {
+                    gutil.log(gutil.colors.gray("No Change ....."), keyname);
+                    callback(null);
                 }
             });
         });
